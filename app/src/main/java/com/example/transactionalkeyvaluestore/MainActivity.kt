@@ -18,7 +18,6 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-
     private val viewModel: TransactionViewModel by viewModels()
     private lateinit var transactionAdapter: TransactionAdapter
 
@@ -40,12 +39,6 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
 
-//                launch {
-//                    viewModel.validation.collect {
-//
-//                    }
-//                }
-
                 launch {
                     viewModel.clearInput.collect {
                         binding.inputEditText.setText("")
@@ -57,7 +50,6 @@ class MainActivity : AppCompatActivity() {
                         transactionAdapter.appendOperation(it)
                     }
                 }
-
             }
         }
     }
