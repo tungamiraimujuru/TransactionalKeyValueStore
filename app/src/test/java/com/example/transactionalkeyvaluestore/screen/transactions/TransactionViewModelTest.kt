@@ -1,5 +1,6 @@
 package com.example.transactionalkeyvaluestore.screen.transactions
 
+import com.example.transactionalkeyvaluestore.repo.TransactionRepository
 import com.example.transactionalkeyvaluestore.repo.TransactionRepositoryImpl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -8,23 +9,29 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mock
+import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
+import org.mockito.MockitoAnnotations
 
 
 class TransactionViewModelTest {
 
-    private var transactionRepository = TransactionRepositoryImpl()
+    @Mock
+    private lateinit var repo: TransactionRepository
 
     private lateinit var viewModel: TransactionViewModel
 
     @Before
     fun setup() {
-        viewModel = TransactionViewModel(Dispatchers.Unconfined,transactionRepository )
+        MockitoAnnotations.initMocks(this) // Ini
+        viewModel = TransactionViewModel(Dispatchers.Unconfined, repo)
     }
 
     @Test
-    fun `given the viewmodel is intialised `() {
+    fun `given the viewmodel is initialized, then assertNotNull`() {
         assertNotNull(viewModel)
     }
 
@@ -32,55 +39,57 @@ class TransactionViewModelTest {
     fun `valid input should call the appropriate repository method`() = runTest {
 
         val input = "SET key1 value1"
-        `when`(transactionRepository.set("key1", "value1")).thenReturn(Unit)
+        doNothing().`when`(repo).set(anyString(), anyString())
 
         viewModel.validateAndProcessInput(input)
 
-        verify(transactionRepository).set("key1", "value1")
+        verify(repo).set("key1", "value1")
     }
 
     @Test
     fun `processSetOperation should call set method in repository`() = runTest {
 
         val tokens = listOf("SET", "key1", "value1")
-        `when`(transactionRepository.set("key1", "value1")).thenReturn(Unit)
+
+        doNothing().`when`(repo).set(anyString(), anyString())
 
         viewModel.processSetOperation(tokens)
 
-        verify(transactionRepository).set("key1", "value1")
+        verify(repo).set("key1", "value1")
     }
 
     @Test
     fun `processGetOperation should call get method in repository`() = runTest {
 
         val tokens = listOf("GET", "key1")
-        `when`(transactionRepository.get("key1")).thenReturn("value1")
+        `when`(repo.get("key1")).thenReturn("value1")
 
         viewModel.processGetOperation(tokens)
 
-        verify(transactionRepository).get("key1")
+        verify(repo).get("key1")
     }
 
     @Test
-    fun `processDeleteOperation should call delete method in repository`() = runBlocking {
+    fun `processDeleteOperation should call delete method in repository`() = runTest {
 
         val tokens = listOf("DELETE", "key1")
-        `when`(transactionRepository.delete("key1")).thenReturn(Unit)
+
+        doNothing().`when`(repo).delete(anyString())
 
         viewModel.processDeleteOperation(tokens)
 
-        verify(transactionRepository).delete("key1")
+        verify(repo).delete("key1")
     }
 
     @Test
     fun `processCountOperation should call count method in repository`() = runTest {
 
         val tokens = listOf("COUNT", "value1")
-        `when`(transactionRepository.count("value1")).thenReturn(5)
+        `when`(repo.count("value1")).thenReturn(5)
 
         viewModel.processCountOperation(tokens)
 
-        verify(transactionRepository).count("value1")
+        verify(repo).count("value1")
     }
 
     @Test
@@ -88,27 +97,26 @@ class TransactionViewModelTest {
 
         viewModel.processBeginOperation()
 
-        verify(transactionRepository).begin()
+        verify(repo).begin()
     }
 
     @Test
     fun `commitOperation should call commit and removeLast methods in repository`() = runBlocking {
 
-        `when`(transactionRepository.commit()).thenReturn("COMMIT")
+        `when`(repo.commit()).thenReturn("COMMIT")
 
         viewModel.commitOperation()
 
-
-        verify(transactionRepository).commit()
-        verify(transactionRepository).removeLast()
+        verify(repo).commit()
+        verify(repo).removeLast()
     }
 
     @Test
     fun `rollbackOperation should call rollback method in repository`(): Unit = runBlocking {
-        `when`(transactionRepository.rollback()).thenReturn("ROLLBACK")
+        `when`(repo.rollback()).thenReturn("ROLLBACK")
 
         viewModel.rollbackOperation()
 
-        verify(transactionRepository).rollback()
+        verify(repo).rollback()
     }
 }
